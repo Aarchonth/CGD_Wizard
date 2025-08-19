@@ -1,45 +1,63 @@
-
-using System.Diagnostics;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class Wizard : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
+    public GameObject FireballPrefab;
+    public float moveSpeed = 2f;
+    public WizardStats wizardStats;
+    
+    
 
+    private Vector3 lastDirection = Vector3.right; // Start: nach rechts
+    internal string score;
+
+    void Update()
+    {
+       // if(Wizard != null)
+        Movement();
+        Casting();
     }
 
-    public float moveSpeed = 2f;
-
-    // Update is called once per frame
-    void Update()
+    private void Movement()
     {
         Vector3 velocity = Vector3.zero;
 
-        //float f = Input.GetAxis("Horizontal");
         if (Input.GetKey(KeyCode.W))
-        {
-            velocity.y += 2;
-        }
+            velocity.y += 1;
         if (Input.GetKey(KeyCode.S))
-        {
-            velocity.y -= 2;
-        }
+            velocity.y -= 1;
         if (Input.GetKey(KeyCode.D))
-        {
-            velocity.x += 2;
-        }
+            velocity.x += 1;
         if (Input.GetKey(KeyCode.A))
-        {
-            velocity.x -= 2;
-        }
+            velocity.x -= 1;
+
         if (velocity != Vector3.zero)
         {
+            lastDirection = velocity.normalized; // Richtung merken
             velocity = velocity.normalized * moveSpeed;
         }
+
         transform.position += velocity * Time.deltaTime;
     }
+
+    private void Casting()
+    {
+        if (wizardStats.mana >= wizardStats.maxMana)
+        {
+            wizardStats.mana = wizardStats.maxMana;
+        }
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            // Spawn-Position: etwas vor dem Wizard in Laufrichtung
+            Vector3 spawnPos = transform.position + lastDirection * 0.9f;
+            GameObject fireball = Instantiate(FireballPrefab, spawnPos, Quaternion.identity);
+
+            Fireball_Red fbScript = fireball.GetComponent<Fireball_Red>();
+            if (fbScript != null)
+            {
+                fbScript.direction = lastDirection;
+            }
+        }
+    }
 }
+

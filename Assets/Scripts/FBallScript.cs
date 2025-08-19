@@ -1,20 +1,21 @@
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class Fireball : MonoBehaviour
+public class Fireball_Red : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public Vector3 direction = Vector3.right; // Standard: nach rechts
+
+    private void Start()
     {
-        
+        Destroy(gameObject, 2);
     }
 
-    // Update is called once per frame
     void Update()
     {
-        transform.position += Vector3.left * Time.deltaTime * 5;
+        transform.position += direction * Time.deltaTime * 5;
     }
-    private void OnCollisionEnter2D(Collision2D collision)
+
+    void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.name != "Wizard")
         {
