@@ -1,63 +1,132 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class Wizard : MonoBehaviour
 {
-    public GameObject FireballPrefab;
-    public float moveSpeed = 2f;
-    public WizardStats wizardStats;
-    
-    
+    public GameObject fireballPrefab;
+    private SpriteRenderer sR;
+    private Animator animator;
+    private Vector3 lastDirection = Vector3.right;
+    private float castingCooldown = 0;
 
-    private Vector3 lastDirection = Vector3.right; // Start: nach rechts
-    internal string score;
+    // Stats
+    public WizardStats wizardStats;
+
+
+    public float mana = 100;
+    public float health = 100;
+    void Start()
+    {
+        sR = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>();
+         mana = wizardStats.maxMana;
+         health = wizardStats.maxHealth;
+    }
 
     void Update()
     {
-       // if(Wizard != null)
         Movement();
         Casting();
     }
 
     private void Movement()
     {
-        Vector3 velocity = Vector3.zero;
+        Vector3 movement = Vector3.zero;
 
         if (Input.GetKey(KeyCode.W))
-            velocity.y += 1;
-        if (Input.GetKey(KeyCode.S))
-            velocity.y -= 1;
-        if (Input.GetKey(KeyCode.D))
-            velocity.x += 1;
-        if (Input.GetKey(KeyCode.A))
-            velocity.x -= 1;
-
-        if (velocity != Vector3.zero)
         {
-            lastDirection = velocity.normalized; // Richtung merken
-            velocity = velocity.normalized * moveSpeed;
+            movement = movement + new Vector3(0, 1, 0);
         }
 
-        transform.position += velocity * Time.deltaTime;
+        if (Input.GetKey(KeyCode.S))
+        {
+            movement += Vector3.down;
+        }
+
+        if (Input.GetKey(KeyCode.A))
+        {
+            movement += Vector3.left;
+        }
+
+        if (Input.GetKey(KeyCode.D))
+        {
+            movement += Vector3.right;
+        }
+
+        // Option 1
+        if (Input.GetKey(KeyCode.W) ^ Input.GetKey(KeyCode.S))
+        {
+            if (Input.GetKey(KeyCode.A) ^ Input.GetKey(KeyCode.D))
+            {
+                movement *= 0.7f;
+            }
+        }
+
+        // Option 2 easy Solution
+        movement.Normalize();
+
+        // Option 3 bei Pseudo Controller
+        if (movement.magnitude > 1)
+        {
+            movement.Normalize();
+        }
+
+        // Set the Animatior Values
+        if (movement.magnitude > 0)
+        {
+            lastDirection = movement;
+            animator.SetBool("walking", true);
+        }
+        else
+        {
+            animator.SetBool("walking", false);
+        }
+
+        // Flip the Player
+        if (movement.x > 0)
+        {
+            sR.flipX = false;
+        }
+        if (movement.x < 0)
+        {
+            sR.flipX = true;
+        }
+
+        // Actually move the Player
+        transform.position += movement * Time.deltaTime * wizardStats.movementSpeed;
     }
 
     private void Casting()
     {
-        if (wizardStats.mana >= wizardStats.maxMana)
+        if (mana >= wizardStats.maxMana)
         {
-            wizardStats.mana = wizardStats.maxMana;
+            mana = wizardStats.maxMana;
         }
-        if (Input.GetKeyDown(KeyCode.Space))
+        else
         {
-            // Spawn-Position: etwas vor dem Wizard in Laufrichtung
-            Vector3 spawnPos = transform.position + lastDirection * 0.9f;
-            GameObject fireball = Instantiate(FireballPrefab, spawnPos, Quaternion.identity);
-
-            Fireball_Red fbScript = fireball.GetComponent<Fireball_Red>();
-            if (fbScript != null)
-            {
-                fbScript.direction = lastDirection;
-            }
+            mana += Time.deltaTime * 5;
+        }
+        animator.SetBool("attacking", false);
+        castingCooldown -= Time.deltaTime;
+        if (Input.GetKeyDown(KeyCode.Space) && castingCooldown <= 0 && mana >= 20)
+        {
+            mana -= 20;
+            animator.SetBool("attacking", true);
+            castingCooldown = 1;
         }
     }
-}
 
+    public void CreateFireball()
+    {
+        float x = 1;
+        if (sR.flipX)
+        {
+            x = -1;
+        }
+        Vector3 position = transform.position + new Vector3(x, 0.8f, 0);
+        GameObject obj = Instantiate(fireballPrefab, position, Quaternion.identity);
+        obj.GetComponent<Fireball>().direction = lastDirection;
+    }
+}

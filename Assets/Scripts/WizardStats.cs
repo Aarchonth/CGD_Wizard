@@ -3,8 +3,8 @@ using UnityEngine;
 public class WizardStats : ScriptableObject
 {
    
-    public float mana = 100; // Beispielwert für Mana
-    public float health = 100; // Beispielwert für Gesundheit
-    public float maxMana = 100;
+    public float maxMana = 100; // Beispielwert für Mana 
+    public float maxHealth = 100; // Beispielwert für Gesundheit
+    public float movementSpeed = 3;
     public int score = 0;
 }
